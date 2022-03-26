@@ -212,9 +212,8 @@ namespace realsense
                 }
                 else
                 {
-                    res = node_.declare_parameter(
-                                   os.str(), rclcpp::ParameterValue(FISHEYE_RESOLUTION), param_desc)
-                              .get<rclcpp::PARAMETER_INTEGER_ARRAY>();
+                    auto default_res = rclcpp::ParameterValue(FISHEYE_RESOLUTION);
+                    res = node_.declare_parameter(os.str(), default_res, param_desc).get<rclcpp::PARAMETER_INTEGER_ARRAY>();
                 }
                 os.str("");
                 os << STREAM_NAME.at(stream.first) << stream.second << ".fps";

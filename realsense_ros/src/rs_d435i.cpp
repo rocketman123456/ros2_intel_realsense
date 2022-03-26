@@ -84,13 +84,13 @@ namespace realsense
                 }
                 else if (param_name == "accel0.fps")
                 {
-                    RCLCPP_INFO(node_.get_logger(), "set accel0.fps");
-                    //result = changeMotionFPS(ACCEL, param);
+                    //RCLCPP_INFO(node_.get_logger(), "set accel0.fps");
+                    result = changeMotionFPS(ACCEL, param);
                 }
                 else if (param_name == "gyro0.fps")
                 {
-                    RCLCPP_INFO(node_.get_logger(), "set gyro0.fps");
-                    //result = changeMotionFPS(GYRO, param);
+                    //RCLCPP_INFO(node_.get_logger(), "set gyro0.fps");
+                    result = changeMotionFPS(GYRO, param);
                 }
             }
         }
