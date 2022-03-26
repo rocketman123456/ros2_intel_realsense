@@ -23,29 +23,30 @@
 
 TEST(UnitTestFunction, testLibraryFunctions)
 {
-  rclcpp::WallRate loop_rate(0.5);
+    rclcpp::WallRate loop_rate(0.5);
 
-  ASSERT_NO_THROW(
-  {
-    auto realsense_node = std::make_shared<realsense::RealSenseNodeFactory>();
-    rclcpp::spin_some(realsense_node);
-    loop_rate.sleep();
-  });
+    ASSERT_NO_THROW(
+        {
+            auto realsense_node = std::make_shared<realsense::RealSenseNodeFactory>();
+            rclcpp::spin_some(realsense_node);
+            loop_rate.sleep();
+        });
 }
 
 TEST(UnitTestFunction, testLibraryIncorrectInputs)
 {
-  ASSERT_THROW(
-  {
-    auto realsense_node = std::make_shared<realsense::RealSenseNodeFactory>("ZR300", "0");
-  }, rclcpp::exceptions::InvalidNamespaceError);
+    ASSERT_THROW(
+        {
+            auto realsense_node = std::make_shared<realsense::RealSenseNodeFactory>("ZR300", "0");
+        },
+        rclcpp::exceptions::InvalidNamespaceError);
 }
 
-int main(int argc, char ** argv)
+int main(int argc, char **argv)
 {
-  rclcpp::init(argc, argv);
-  testing::InitGoogleTest(&argc, argv);
-  int ret = RUN_ALL_TESTS();
-  rclcpp::shutdown();
-  return ret;
+    rclcpp::init(argc, argv);
+    testing::InitGoogleTest(&argc, argv);
+    int ret = RUN_ALL_TESTS();
+    rclcpp::shutdown();
+    return ret;
 }

@@ -18,120 +18,162 @@
 
 namespace realsense
 {
-RealSenseD435I::RealSenseD435I(rs2::context ctx, rs2::device dev, rclcpp::Node & node)
-: RealSenseD435(ctx, dev, node)
-{
-  for (auto & stream : MOTION_STREAMS) {
-    setupStream(stream);
-  }
-  linear_accel_cov_ = DEFAULT_LINEAR_ACCEL_COV;
-  angular_velocity_cov_ = DEFAULT_ANGULAR_VELOCITY_COV;
-  initialized_ = true;
-}
-
-void RealSenseD435I::publishTopicsCallback(const rs2::frame & frame)
-{
-  rclcpp::Time t = node_.now();
-  if (frame.is<rs2::frameset>()) {
-    RealSenseD435::publishTopicsCallback(frame);
-  } else if (frame.is<rs2::motion_frame>()) {
-    if ((enable_[ACCEL] &&
-      (imu_pub_[ACCEL]->get_subscription_count() > 0 ||
-      imu_info_pub_[ACCEL]->get_subscription_count() > 0)) ||
-      (enable_[GYRO] &&
-      (imu_pub_[GYRO]->get_subscription_count() > 0 ||
-      imu_info_pub_[GYRO]->get_subscription_count() > 0)))
+    RealSenseD435I::RealSenseD435I(rs2::context ctx, rs2::device dev, rclcpp::Node &node)
+        : RealSenseD435(ctx, dev, node)
     {
-      publishIMUTopic(frame, t);
+        for (auto &stream : MOTION_STREAMS)
+        {
+            setupStream(stream);
+        }
+
+        if (node_.has_parameter("accel0.fps")) {
+            node_.get_parameter("accel0.fps", accel_fps_);
+        } else {
+            accel_fps_ = node_.declare_parameter("accel0.fps", DEFAULT_ACCEL_FPS);
+        }
+
+        if (node_.has_parameter("gyro0.fps")) {
+            node_.get_parameter("gyro0.fps", gyro_fps_);
+        } else {
+            gyro_fps_ = node_.declare_parameter("gyro0.fps", DEFAULT_GYRO_FPS);
+        }
+
+        linear_accel_cov_ = DEFAULT_LINEAR_ACCEL_COV;
+        angular_velocity_cov_ = DEFAULT_ANGULAR_VELOCITY_COV;
+        initialized_ = true;
     }
-  }
-}
 
-Result RealSenseD435I::paramChangeCallback(const std::vector<rclcpp::Parameter> & params)
-{
-  auto result = Result();
-  result.successful = true;
-  if (this->initialized_ == true) {
-    result = RealSenseD435::paramChangeCallback(params);
-    for (auto & param : params) {
-      auto param_name = param.get_name();
-      if (param_name == "accel0.enabled") {
-        result = toggleStream(ACCEL, param);
-      } else if (param_name == "gyro0.enabled") {
-        result = toggleStream(GYRO, param);
-      }
+    void RealSenseD435I::publishTopicsCallback(const rs2::frame &frame)
+    {
+        rclcpp::Time t = node_.now();
+        if (frame.is<rs2::frameset>())
+        {
+            RealSenseD435::publishTopicsCallback(frame);
+        }
+        else if (frame.is<rs2::motion_frame>())
+        {
+            if ((enable_[ACCEL] &&
+                 (imu_pub_[ACCEL]->get_subscription_count() > 0 ||
+                  imu_info_pub_[ACCEL]->get_subscription_count() > 0)) ||
+                (enable_[GYRO] &&
+                 (imu_pub_[GYRO]->get_subscription_count() > 0 ||
+                  imu_info_pub_[GYRO]->get_subscription_count() > 0)))
+            {
+                publishIMUTopic(frame, t);
+            }
+        }
     }
-  }
-  return result;
-}
 
-void RealSenseD435I::publishIMUTopic(const rs2::frame & frame, const rclcpp::Time & time)
-{
-  auto type = frame.get_profile().stream_type();
-  auto index = frame.get_profile().stream_index();
-  auto type_index = std::pair<rs2_stream, int>(type, index);
-  auto m_frame = frame.as<rs2::motion_frame>();
-  sensor_msgs::msg::Imu imu_msg;
-  realsense_msgs::msg::IMUInfo info_msg;
-
-  imu_msg.header.frame_id = OPTICAL_FRAME_ID.at(type_index);
-  imu_msg.orientation.x = 0.0;
-  imu_msg.orientation.y = 0.0;
-  imu_msg.orientation.z = 0.0;
-  imu_msg.orientation.w = 0.0;
-  imu_msg.orientation_covariance = {-1.0, 0.0, 0.0,
-    0.0, 0.0, 0.0,
-    0.0, 0.0, 0.0};
-  imu_msg.linear_acceleration_covariance = {linear_accel_cov_, 0.0, 0.0,
-    0.0, linear_accel_cov_, 0.0,
-    0.0, 0.0, linear_accel_cov_};
-  imu_msg.angular_velocity_covariance = {angular_velocity_cov_, 0.0, 0.0,
-    0.0, angular_velocity_cov_, 0.0,
-    0.0, 0.0, angular_velocity_cov_};
-
-  auto imu_data = m_frame.get_motion_data();
-  if (type_index == GYRO) {
-    imu_msg.angular_velocity.x = imu_data.x;
-    imu_msg.angular_velocity.y = imu_data.y;
-    imu_msg.angular_velocity.z = imu_data.z;
-    info_msg = getIMUInfo(frame, GYRO);
-  } else if (type_index == ACCEL) {
-    imu_msg.linear_acceleration.x = imu_data.x;
-    imu_msg.linear_acceleration.y = imu_data.y;
-    imu_msg.linear_acceleration.z = imu_data.z;
-    info_msg = getIMUInfo(frame, ACCEL);
-  }
-  imu_msg.header.stamp = time;
-  imu_pub_[type_index]->publish(imu_msg);
-  imu_info_pub_[type_index]->publish(info_msg);
-}
-
-IMUInfo RealSenseD435I::getIMUInfo(const rs2::frame & frame, const stream_index_pair & stream_index)
-{
-  auto m_profile = frame.get_profile().as<rs2::motion_stream_profile>();
-  realsense_msgs::msg::IMUInfo info;
-  rs2_motion_device_intrinsic imu_intrinsics;
-  try {
-    imu_intrinsics = m_profile.get_motion_intrinsics();
-  } catch (const std::runtime_error & ex) {
-    RCLCPP_INFO(
-      node_.get_logger(),
-      "No Motion Intrinsics available. Please calibrate it by rs-imu-calibration tool first.");
-    imu_intrinsics = {{{1, 0, 0, 0},
-      {0, 1, 0, 0},
-      {0, 0, 1, 0}}, {0, 0, 0}, {0, 0, 0}};
-  }
-
-  auto index = 0;
-  info.header.frame_id = OPTICAL_FRAME_ID.at(stream_index);
-  for (int i = 0; i < 3; ++i) {
-    for (int j = 0; j < 4; ++j) {
-      info.data[index] = imu_intrinsics.data[i][j];
-      ++index;
+    Result RealSenseD435I::paramChangeCallback(const std::vector<rclcpp::Parameter> &params)
+    {
+        auto result = Result();
+        result.successful = true;
+        if (this->initialized_ == true)
+        {
+            result = RealSenseD435::paramChangeCallback(params);
+            for (auto &param : params)
+            {
+                auto param_name = param.get_name();
+                if (param_name == "accel0.enabled")
+                {
+                    result = toggleStream(ACCEL, param);
+                }
+                else if (param_name == "gyro0.enabled")
+                {
+                    result = toggleStream(GYRO, param);
+                }
+                else if (param_name == "accel0.fps")
+                {
+                    RCLCPP_INFO(node_.get_logger(), "set accel0.fps");
+                    //result = changeMotionFPS(ACCEL, param);
+                }
+                else if (param_name == "gyro0.fps")
+                {
+                    RCLCPP_INFO(node_.get_logger(), "set gyro0.fps");
+                    //result = changeMotionFPS(GYRO, param);
+                }
+            }
+        }
+        return result;
     }
-    info.noise_variances[i] = imu_intrinsics.noise_variances[i];
-    info.bias_variances[i] = imu_intrinsics.bias_variances[i];
-  }
-  return info;
-}
-}  // namespace realsense
+
+    void RealSenseD435I::publishIMUTopic(const rs2::frame &frame, const rclcpp::Time &time)
+    {
+        auto type = frame.get_profile().stream_type();
+        auto index = frame.get_profile().stream_index();
+        auto type_index = std::pair<rs2_stream, int>(type, index);
+        auto m_frame = frame.as<rs2::motion_frame>();
+        sensor_msgs::msg::Imu imu_msg;
+        realsense_msgs::msg::IMUInfo info_msg;
+
+        imu_msg.header.frame_id = OPTICAL_FRAME_ID.at(type_index);
+        imu_msg.orientation.x = 0.0;
+        imu_msg.orientation.y = 0.0;
+        imu_msg.orientation.z = 0.0;
+        imu_msg.orientation.w = 0.0;
+        imu_msg.orientation_covariance = {-1.0, 0.0, 0.0,
+                                          0.0, 0.0, 0.0,
+                                          0.0, 0.0, 0.0};
+        imu_msg.linear_acceleration_covariance = {linear_accel_cov_, 0.0, 0.0,
+                                                  0.0, linear_accel_cov_, 0.0,
+                                                  0.0, 0.0, linear_accel_cov_};
+        imu_msg.angular_velocity_covariance = {angular_velocity_cov_, 0.0, 0.0,
+                                               0.0, angular_velocity_cov_, 0.0,
+                                               0.0, 0.0, angular_velocity_cov_};
+
+        auto imu_data = m_frame.get_motion_data();
+        if (type_index == GYRO)
+        {
+            imu_msg.angular_velocity.x = imu_data.x;
+            imu_msg.angular_velocity.y = imu_data.y;
+            imu_msg.angular_velocity.z = imu_data.z;
+            info_msg = getIMUInfo(frame, GYRO);
+        }
+        else if (type_index == ACCEL)
+        {
+            imu_msg.linear_acceleration.x = imu_data.x;
+            imu_msg.linear_acceleration.y = imu_data.y;
+            imu_msg.linear_acceleration.z = imu_data.z;
+            info_msg = getIMUInfo(frame, ACCEL);
+        }
+        imu_msg.header.stamp = time;
+        imu_pub_[type_index]->publish(imu_msg);
+        imu_info_pub_[type_index]->publish(info_msg);
+    }
+
+    IMUInfo RealSenseD435I::getIMUInfo(const rs2::frame &frame, const stream_index_pair &stream_index)
+    {
+        auto m_profile = frame.get_profile().as<rs2::motion_stream_profile>();
+        realsense_msgs::msg::IMUInfo info;
+        rs2_motion_device_intrinsic imu_intrinsics;
+        try
+        {
+            imu_intrinsics = m_profile.get_motion_intrinsics();
+        }
+        catch (const std::runtime_error &ex)
+        {
+            RCLCPP_INFO(
+                node_.get_logger(),
+                "No Motion Intrinsics available. Please calibrate it by rs-imu-calibration tool first.");
+            imu_intrinsics = {{{1, 0, 0, 0},
+                               {0, 1, 0, 0},
+                               {0, 0, 1, 0}},
+                              {0, 0, 0},
+                              {0, 0, 0}};
+        }
+
+        auto index = 0;
+        info.header.frame_id = OPTICAL_FRAME_ID.at(stream_index);
+        for (int i = 0; i < 3; ++i)
+        {
+            for (int j = 0; j < 4; ++j)
+            {
+                info.data[index] = imu_intrinsics.data[i][j];
+                ++index;
+            }
+            info.noise_variances[i] = imu_intrinsics.noise_variances[i];
+            info.bias_variances[i] = imu_intrinsics.bias_variances[i];
+        }
+        return info;
+    }
+} // namespace realsense

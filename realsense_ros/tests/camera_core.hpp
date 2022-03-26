@@ -13,7 +13,7 @@
 // limitations under the License.
 
 #pragma once
-#ifndef CAMERA_CORE_H  // NOLINT(build/header_guard)
+#ifndef CAMERA_CORE_H // NOLINT(build/header_guard)
 #define CAMERA_CORE_H
 
 #include <cstdlib>
@@ -41,8 +41,8 @@
 
 const int STREAM_COUNT = 10;
 const uint16_t RS435_RGB_PID = 0x0b07;  // AWGC
-const uint16_t RS435i_RGB_PID = 0x0B3A;  // AWGC_MM
-const uint16_t RS_T265_PID = 0x0b37;  // T265
+const uint16_t RS435i_RGB_PID = 0x0B3A; // AWGC_MM
+const uint16_t RS_T265_PID = 0x0b37;    // T265
 const double ROTATION_IDENTITY[] = {1, 0, 0, 0, 1, 0, 0, 0, 1};
 
 int g_color_height_exp = 480;
@@ -91,8 +91,8 @@ float g_fisheye2_avg = 0.0f;
 
 int g_height_recv[STREAM_COUNT] = {0};
 int g_width_recv[STREAM_COUNT] = {0};
-uint32_t g_step_recv[STREAM_COUNT] = {0};  // Received stream step.
-char g_encoding_recv[STREAM_COUNT][32] = {""};  // Received stream encoding.
+uint32_t g_step_recv[STREAM_COUNT] = {0};      // Received stream step.
+char g_encoding_recv[STREAM_COUNT][32] = {""}; // Received stream encoding.
 
 int g_caminfo_height_recv[STREAM_COUNT] = {0};
 int g_caminfo_width_recv[STREAM_COUNT] = {0};
@@ -110,5 +110,4 @@ double g_caminfo_projection_recv[STREAM_COUNT][12] = {{0.0}};
 char g_dmodel_recv[STREAM_COUNT][32] = {""};
 char camera_type[32] = "";
 
-
-#endif  // CAMERA_CORE_H  // NOLINT(build/header_guard)
+#endif // CAMERA_CORE_H  // NOLINT(build/header_guard)

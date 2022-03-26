@@ -24,26 +24,26 @@
 
 namespace realsense
 {
-class RealSenseNodeFactory : public rclcpp::Node
-{
-public:
-  explicit RealSenseNodeFactory(const rclcpp::NodeOptions & node_options = rclcpp::NodeOptions());
-  RealSenseNodeFactory(
-    const std::string & node_name, const std::string & ns,
-    const rclcpp::NodeOptions & node_options = rclcpp::NodeOptions());
-  virtual ~RealSenseNodeFactory();
+    class RealSenseNodeFactory : public rclcpp::Node
+    {
+    public:
+        explicit RealSenseNodeFactory(const rclcpp::NodeOptions &node_options = rclcpp::NodeOptions());
+        RealSenseNodeFactory(
+            const std::string &node_name, const std::string &ns,
+            const rclcpp::NodeOptions &node_options = rclcpp::NodeOptions());
+        virtual ~RealSenseNodeFactory();
 
-private:
-  void init();
-  void startDevice();
-  void changeDeviceCallback(rs2::event_information & info);
-  void getDevice(rs2::device_list & list);
-  std::unique_ptr<RealSenseBase> rs_node_;
-  rs2::context ctx_;
-  rs2::device dev_;
-  std::string serial_no_;
-  std::thread query_thread_;
-};
-}  // namespace realsense
+    private:
+        void init();
+        void startDevice();
+        void changeDeviceCallback(rs2::event_information &info);
+        void getDevice(rs2::device_list &list);
+        std::unique_ptr<RealSenseBase> rs_node_;
+        rs2::context ctx_;
+        rs2::device dev_;
+        std::string serial_no_;
+        std::thread query_thread_;
+    };
+} // namespace realsense
 
-#endif  // REALSENSE__RS_FACTORY_HPP_
+#endif // REALSENSE__RS_FACTORY_HPP_

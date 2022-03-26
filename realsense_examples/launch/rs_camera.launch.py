@@ -16,10 +16,7 @@
 import os
 import launch
 from launch_ros.actions import Node
-from launch_ros.actions import ComposableNodeContainer
-from launch_ros.descriptions import ComposableNode
 from launch.substitutions import LaunchConfiguration
-from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
     #camera_base_frame_id = LaunchConfiguration('base_frame_id', default='d435i_link')
@@ -29,6 +26,8 @@ def generate_launch_description():
     camera_depth_fps = LaunchConfiguration('depth0.fps', default='60')
     camera_infra1_fps = LaunchConfiguration('infra1.fps', default='60')
     camera_infra2_fps = LaunchConfiguration('infra2.fps', default='60')
+    camera_accel_fps = LaunchConfiguration('accel0.fps', default='250')
+    camera_gyro_fps = LaunchConfiguration('gyro0.fps', default='400')
     rgbd_node = Node(
         package='realsense_node',
         executable='realsense_node',
@@ -39,7 +38,9 @@ def generate_launch_description():
             'color0.fps' : camera_color_fps,
             'depth0.fps' : camera_depth_fps,
             'infra1.fps' : camera_infra1_fps,
-            'infra2.fps' : camera_infra2_fps
+            'infra2.fps' : camera_infra2_fps,
+            'accel0.fps' : camera_accel_fps,
+            'gyro0.fps' : camera_gyro_fps
         }]
     )
     return launch.LaunchDescription([rgbd_node])
