@@ -9,16 +9,16 @@
       color0:
         enabled: true
         resolution: [640,480]
-        fps: 30
+        fps: 60
       depth0:
         enabled: true
         resolution: [640,480]
-        fps: 30
+        fps: 60
       infra1:
         enabled: true
         resolution: [640,480]
-        fps: 30
+        fps: 60
       infra2:
         enabled: true
         resolution: [640,480]
-        fps: 30
+        fps: 60

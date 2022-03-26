@@ -1,28 +1,30 @@
 /d435i:
   camera:
     ros__parameters:
-      serial_no: 843112073259 # d435i
-      align_depth: false
+      serial_no: 109622073740 # d435i
+      align_depth: true
       enable_pointcloud: true
       dense_pointcloud: true
-      #base_frame_id:
+      #base_frame_id: d435i_link
       color0:
         enabled: true
         resolution: [640,480]
-        fps: 30
+        fps: 60
       depth0:
         enabled: true
         resolution: [640,480]
-        fps: 30
+        fps: 60
       infra1:
         enabled: true
         resolution: [640,480]
-        fps: 30
+        fps: 60
       infra2:
         enabled: true
         resolution: [640,480]
-        fps: 30
+        fps: 60
       accel0:
         enabled: true
+        fps: 250
       gyro0:
         enabled: true
+        fps: 400

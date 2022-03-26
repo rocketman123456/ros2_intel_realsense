@@ -39,24 +39,24 @@ def generate_launch_description():
 
     camera1_node = Node(
         package='realsense_node',
-        node_executable='realsense_node',
-        node_namespace="/camera1",
+        executable='realsense_node',
+        namespace="/camera1",
         output='screen',
         parameters=[{'serial_no':camera1_serial_no, 
                     'base_frame_id': camera1_base_frame_id}]
         )
     camera2_node = Node(
         package='realsense_node',
-        node_executable='realsense_node',
-        node_namespace="/camera2",
+        executable='realsense_node',
+        namespace="/camera2",
         output='screen',
         parameters=[{'serial_no':camera2_serial_no, 
                     'base_frame_id': camera2_base_frame_id}]
         )
     camera3_node = Node(
         package='realsense_node',
-        node_executable='realsense_node',
-        node_namespace="/camera3",
+        executable='realsense_node',
+        namespace="/camera3",
         output='screen',
         parameters=[{'serial_no':camera3_serial_no, 
                     'base_frame_id': camera3_base_frame_id}]

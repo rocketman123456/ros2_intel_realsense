@@ -56,15 +56,15 @@ def generate_launch_description():
         Node(
             ## Configure the TF of the robot to the origin of the map coordinates
             package='tf2_ros',
-            node_executable='static_transform_publisher',
+            executable='static_transform_publisher',
             output='screen',
             arguments=['0', '0', '0', '0', '0', '0', 'map', 'odom_frame']
             ),
 
         Node(
             package='depthimage_to_laserscan',
-            node_executable='depthimage_to_laserscan_node',
-            node_name='scan',
+            executable='depthimage_to_laserscan_node',
+            name='scan',
             output='screen',
             parameters=[{'output_frame':'d435_link'}],
             remappings=[('depth','/d435/camera/depth/image_rect_raw'),
@@ -73,7 +73,7 @@ def generate_launch_description():
 
         Node(
             package='cartographer_ros',
-            node_executable='cartographer_node',
+            executable='cartographer_node',
             output='log',
             parameters=[{'use_sim_time': use_sim_time}],
             arguments=['-configuration_directory', cartographer_config_dir, '-configuration_basename', configuration_basename]),
@@ -90,7 +90,7 @@ def generate_launch_description():
 
         Node(
             package='cartographer_ros',
-            node_executable='occupancy_grid_node',
+            executable='occupancy_grid_node',
             node_name='occupancy_grid_node',
             parameters=[{'use_sim_time': use_sim_time}],
             arguments=['-resolution', resolution, '-publish_period_sec', publish_period_sec]),
